@@ -1,0 +1,41 @@
+com.example.ppe_server/
+│
+├── PpeServerApplication.java          // 스프링부트 실행 시작점 (메인 클래스)
+│
+├── config/                            // 설정 모음
+│   ├── PasswordConfig.java            // 비밀번호 암호화(BCrypt) 도구 등록
+│   ├── SecurityConfig.java            // 보안 설정 (경로별 인증 허용/차단, JWT 필터 연결)
+│   └── JwtAuthFilter.java             // 요청마다 토큰을 검사하는 문지기(필터)
+│
+├── controller/                        // 요청을 받는 입구
+│   ├── UserController.java            // 회원 요청 처리 (회원가입/로그인/아이디찾기/비번재설정·변경/탈퇴)
+│   ├── EmailController.java           // 이메일 인증 요청 처리 (코드 발송/검증)
+│   └── GlobalExceptionHandler.java    // 오류를 잡아 응답 형식으로 변환 (전역 예외 처리)
+│
+├── service/                           // 실제 로직 처리
+│   ├── UserService.java               // 회원 로직 (중복확인/해시/로그인/토큰발급/재설정·변경/탈퇴)
+│   └── EmailService.java              // 이메일 인증 로직 (코드 생성·발송·검증)
+│
+├── repository/                        // DB 접근 (JPA)
+│   ├── UserRepository.java            // users 테이블 조회/저장 (중복확인, 이메일로 찾기)
+│   └── EmailVerificationRepository.java // email_verifications 테이블 조회/저장
+│
+├── entity/                            // DB 테이블을 자바로 표현
+│   ├── User.java                      // users 테이블 매핑 (회원 정보)
+│   ├── Role.java                      // 권한 구분 enum (ADMIN/WORKER)
+│   ├── EmailVerification.java         // email_verifications 테이블 매핑 (인증코드)
+│   └── Purpose.java                   // 인증 용도 enum (SIGNUP/FIND_ID/RESET_PW)
+│
+├── dto/                               // 요청/응답 데이터 그릇
+│   ├── SignupRequest.java             // 회원가입 요청
+│   ├── LoginRequest.java              // 로그인 요청 (아이디/비번)
+│   ├── LoginResponse.java             // 로그인 응답 (토큰/아이디/권한)
+│   ├── EmailSendRequest.java          // 이메일 인증코드 발송 요청
+│   ├── EmailVerifyRequest.java        // 이메일 인증코드 검증 요청
+│   ├── FindIdRequest.java             // 아이디 찾기 요청
+│   ├── ResetPasswordRequest.java      // 비밀번호 재설정 요청 (로그인 전)
+│   ├── ChangePasswordRequest.java     // 비밀번호 변경 요청 (로그인 후)
+│   └── DeleteAccountRequest.java      // 회원 탈퇴 요청 (비밀번호 확인)
+│
+└── util/                              // 유틸리티 도구
+    └── JwtUtil.java                   // JWT 토큰 생성/검증 도구
