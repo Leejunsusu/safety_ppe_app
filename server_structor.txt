@@ -1,41 +1,56 @@
 com.example.ppe_server/
 │
-├── PpeServerApplication.java          // 스프링부트 실행 시작점 (메인 클래스)
+├── PpeServerApplication.java              // 스프링부트 실행 시작점 (메인 클래스)
 │
-├── config/                            // 설정 모음
-│   ├── PasswordConfig.java            // 비밀번호 암호화(BCrypt) 도구 등록
-│   ├── SecurityConfig.java            // 보안 설정 (경로별 인증 허용/차단, JWT 필터 연결)
-│   └── JwtAuthFilter.java             // 요청마다 토큰을 검사하는 문지기(필터)
+├── config/                                // 설정 모음
+│   ├── PasswordConfig.java                // 비밀번호 암호화(BCrypt) 도구 등록
+│   ├── SecurityConfig.java                // 보안 설정 (경로별 인증 허용/차단, JWT 필터 연결)
+│   └── JwtAuthFilter.java                 // 요청마다 토큰을 검사하는 문지기(필터)
 │
-├── controller/                        // 요청을 받는 입구
-│   ├── UserController.java            // 회원 요청 처리 (회원가입/로그인/아이디찾기/비번재설정·변경/탈퇴)
-│   ├── EmailController.java           // 이메일 인증 요청 처리 (코드 발송/검증)
-│   └── GlobalExceptionHandler.java    // 오류를 잡아 응답 형식으로 변환 (전역 예외 처리)
+├── controller/                            // 요청을 받는 입구
+│   ├── UserController.java                // 회원 요청 (회원가입/로그인/아이디찾기/비번재설정·변경/탈퇴)
+│   ├── EmailController.java               // 이메일 인증 요청 (코드 발송/검증)
+│   ├── GlobalExceptionHandler.java        // 오류를 잡아 응답 형식으로 변환 (전역 예외 처리)
+│   └── site/                              // 현장 관련 컨트롤러
+│       └── SiteController.java            // 현장 요청 (생성/참여/나가기/내현장조회/노동자검색)
 │
-├── service/                           // 실제 로직 처리
-│   ├── UserService.java               // 회원 로직 (중복확인/해시/로그인/토큰발급/재설정·변경/탈퇴)
-│   └── EmailService.java              // 이메일 인증 로직 (코드 생성·발송·검증)
+├── service/                               // 실제 로직 처리
+│   ├── UserService.java                   // 회원 로직 (중복확인/해시/로그인/토큰발급/재설정·변경/탈퇴)
+│   ├── EmailService.java                  // 이메일 인증 로직 (코드 생성·발송·검증)
+│   └── site/                              // 현장 관련 서비스
+│       └── SiteService.java               // 현장 로직 (생성/참여/나가기/조회/노동자검색)
 │
-├── repository/                        // DB 접근 (JPA)
-│   ├── UserRepository.java            // users 테이블 조회/저장 (중복확인, 이메일로 찾기)
-│   └── EmailVerificationRepository.java // email_verifications 테이블 조회/저장
+├── repository/                            // DB 접근 (JPA)
+│   ├── UserRepository.java                // users 테이블 (중복확인, 이메일·닉네임으로 찾기)
+│   ├── EmailVerificationRepository.java   // email_verifications 테이블
+│   └── site/                              // 현장 관련 리포지토리
+│       └── SiteRepository.java            // sites 테이블 (코드 중복확인, 코드로 찾기)
 │
-├── entity/                            // DB 테이블을 자바로 표현
-│   ├── User.java                      // users 테이블 매핑 (회원 정보)
-│   ├── Role.java                      // 권한 구분 enum (ADMIN/WORKER)
-│   ├── EmailVerification.java         // email_verifications 테이블 매핑 (인증코드)
-│   └── Purpose.java                   // 인증 용도 enum (SIGNUP/FIND_ID/RESET_PW)
+├── entity/                                // DB 테이블을 자바로 표현
+│   ├── User.java                          // users 테이블 매핑 (회원 정보)
+│   ├── Role.java                          // 권한 구분 enum (ADMIN/WORKER)
+│   ├── EmailVerification.java             // email_verifications 테이블 매핑 (인증코드)
+│   ├── Purpose.java                       // 인증 용도 enum (SIGNUP/FIND_ID/RESET_PW)
+│   └── site/                              // 현장 관련 엔티티
+│       └── Site.java                      // sites 테이블 매핑 (현장 정보)
 │
-├── dto/                               // 요청/응답 데이터 그릇
-│   ├── SignupRequest.java             // 회원가입 요청
-│   ├── LoginRequest.java              // 로그인 요청 (아이디/비번)
-│   ├── LoginResponse.java             // 로그인 응답 (토큰/아이디/권한)
-│   ├── EmailSendRequest.java          // 이메일 인증코드 발송 요청
-│   ├── EmailVerifyRequest.java        // 이메일 인증코드 검증 요청
-│   ├── FindIdRequest.java             // 아이디 찾기 요청
-│   ├── ResetPasswordRequest.java      // 비밀번호 재설정 요청 (로그인 전)
-│   ├── ChangePasswordRequest.java     // 비밀번호 변경 요청 (로그인 후)
-│   └── DeleteAccountRequest.java      // 회원 탈퇴 요청 (비밀번호 확인)
+├── dto/                                   // 요청/응답 데이터 그릇
+│   ├── SignupRequest.java                 // 회원가입 요청
+│   ├── LoginRequest.java                  // 로그인 요청 (아이디/비번)
+│   ├── LoginResponse.java                 // 로그인 응답 (토큰/아이디/권한)
+│   ├── EmailSendRequest.java              // 이메일 인증코드 발송 요청
+│   ├── EmailVerifyRequest.java            // 이메일 인증코드 검증 요청
+│   ├── FindIdRequest.java                 // 아이디 찾기 요청
+│   ├── ResetPasswordRequest.java          // 비밀번호 재설정 요청 (로그인 전)
+│   ├── ChangePasswordRequest.java         // 비밀번호 변경 요청 (로그인 후)
+│   ├── DeleteAccountRequest.java          // 회원 탈퇴 요청 (비밀번호 확인)
+│   └── site/                              // 현장 관련 DTO
+│       ├── CreateSiteRequest.java         // 현장 생성 요청 (현장명, 주소)
+│       ├── JoinSiteRequest.java           // 현장 참여 요청 (6자리 코드)
+│       ├── SiteResponse.java              // 현장 정보 응답 (코드, 이름, 주소)
+│       └── WorkerResponse.java            // 노동자 검색 결과 응답 (아이디, 이름, 닉네임)
 │
-└── util/                              // 유틸리티 도구
-    └── JwtUtil.java                   // JWT 토큰 생성/검증 도구
+└── util/                                  // 유틸리티 도구
+    ├── JwtUtil.java                       // JWT 토큰 생성/검증 도구
+    └── site/                              // 현장 관련 유틸
+        └── SiteCodeGenerator.java         // 현장 6자리 코드 생성기 (영문 대문자+숫자)

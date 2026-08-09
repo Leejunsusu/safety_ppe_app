@@ -20,4 +20,7 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     // 이메일로 사용자 찾기 → 아이디 찾기 / 비밀번호 재설정용
     Optional<User> findByEmail(String email);
+
+    // 특정 현장의, 특정 닉네임을 가진 노동자 찾기
+    Optional<User> findBySiteIdAndNickname(Integer siteId, String nickname);
 }

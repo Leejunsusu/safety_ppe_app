@@ -59,4 +59,9 @@ public class User {
         this.passwordHash = newPasswordHash;
     }
 
+    // 소속 현장 변경 (참여/나가기)
+    public void updateSite(Integer siteId) {
+        this.siteId = siteId;
+    }
+
 }
