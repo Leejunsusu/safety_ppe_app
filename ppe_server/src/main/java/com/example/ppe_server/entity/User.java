@@ -59,4 +59,13 @@ public class User {
         this.passwordHash = newPasswordHash;
     }
 
+    // 소속 현장 변경 (현장 합류/탈퇴 시 사용)
+    public void assignSite(Integer siteId) {
+        this.siteId = siteId;
+    }
+    // 알림 수신 여부 변경 (알림 설정 ON/OFF)
+    public void updateNotificationEnabled(boolean enabled) {
+        this.notificationEnabled = enabled;
+    }
+
 }

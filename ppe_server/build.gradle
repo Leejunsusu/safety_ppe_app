@@ -37,6 +37,9 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     // 이메일 발송 라이브러리
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+    // QR 코드 이미지 생성 라이브러리
+    implementation 'com.google.zxing:core:3.5.3'
+    implementation 'com.google.zxing:javase:3.5.3'
 }
 
 tasks.named('test') {
