@@ -1,0 +1,95 @@
+com.example.ppe_server/   ※ QR / 알림 / 대시보드 파트 (기존 회원·현장 파트에 이어붙이는 형태)
+│
+├── controller/                            // 요청을 받는 입구
+│   ├── QrController.java                  // QR 요청 (발급/재발급, 검증)
+│   ├── NotificationController.java        // 알림 요청 (설정 조회·변경, 이력 조회, 읽음 처리, 안읽음 개수)
+│   └── DashboardController.java           // 대시보드 요청 (관리자용/노동자용 조회)
+│
+├── service/                               // 실제 로직 처리
+│   ├── QrService.java                     // QR 로직 (노동자별 1개 발급·덮어쓰기, 토큰 검증·만료 판정)
+│   ├── NotificationService.java          // 알림 로직 (설정 ON/OFF, 이력 조회·읽음, 이력 저장)
+│   └── DashboardService.java             // 대시보드 로직 (관리자: 현장 노동자 안전등급 목록 / 노동자: 본인 이력)
+│
+├── repository/                            // DB 접근 (JPA)
+│   ├── QrTokenRepository.java             // qr_tokens 테이블 (토큰으로 찾기)
+│   ├── NotificationRepository.java        // notifications 테이블 (수신자별 조회, 안읽음 개수)
+│   ├── UserSafetyStatusRepository.java    // user_safety_status 테이블 (안전등급 조회)
+│   └── DetectionRecordRepository.java     // detection_records 테이블 (미착용 이력·건수 조회) ※조회 전용
+│
+├── entity/                                // DB 테이블을 자바로 표현
+│   ├── QrToken.java                       // qr_tokens 테이블 매핑 (노동자별 현재 유효 QR, user_id가 PK)
+│   ├── Notification.java                  // notifications 테이블 매핑 (FCM 알림 발송 이력)
+│   ├── UserSafetyStatus.java              // user_safety_status 테이블 매핑 (위반 누적/안전등급)
+│   ├── SafetyGrade.java                   // 안전등급 enum (GREEN/YELLOW/RED, 건수→등급 계산 포함)
+│   ├── DetectionRecord.java               // detection_records 테이블 매핑 (미착용 감지 기록) ※뼈대, 저장은 감지 파트
+│   └── DetectionMode.java                 // 감지 모드 enum (GATE/INSPECTION)
+│
+├── dto/                                   // 요청/응답 데이터 그릇
+│   ├── GenerateQrRequest.java             // QR 발급 요청 (유효기간 validDays)
+│   ├── QrCodeResponse.java                // QR 발급 응답 (토큰, 만료시각, QR이미지 Base64)
+│   ├── VerifyQrRequest.java               // QR 검증 요청 (스캔한 토큰)
+│   ├── VerifyQrResponse.java              // QR 검증 응답 (유효여부, 노동자 신원, 소속현장)
+│   ├── NotificationSettingRequest.java    // 알림 설정 변경 요청 (enabled)
+│   ├── NotificationSettingResponse.java   // 알림 설정 응답 (아이디, 현재 ON/OFF)
+│   ├── NotificationResponse.java          // 알림 1건 응답 (내용, 발송시각, 읽음여부)
+│   ├── ManagerDashboardResponse.java      // 관리자 대시보드 응답 (오늘 통계 + 노동자 안전등급 목록)
+│   ├── WorkerSafetyResponse.java          // 관리자 대시보드 - 노동자 1명 안전상태 (등급/위반건수)
+│   ├── WorkerDashboardResponse.java       // 노동자 대시보드 응답 (본인 등급 + 미착용 이력 + 알림 이력)
+│   └── DetectionRecordResponse.java       // 미착용 기록 1건 응답 (감지일시, 작업종류, 현장)
+│
+└── util/                                  // 유틸리티 도구
+    └── QrImageGenerator.java              // QR 이미지 생성기 (ZXing, 토큰→PNG→Base64)
+
+
+─────────────────────────────────────────────────────────────
+[API 엔드포인트 요약]
+─────────────────────────────────────────────────────────────
+QR
+  POST /api/qr/issue     QR 발급/재발급 (로그인 필요, 본인 QR)
+  POST /api/qr/verify    QR 검증 (게이트에서 스캔한 토큰 확인)
+
+알림
+  GET  /api/notifications/settings        내 알림 설정 조회
+  PUT  /api/notifications/settings        내 알림 설정 변경 (ON/OFF)
+  GET  /api/notifications                 내 알림 이력 조회 (최신순)
+  GET  /api/notifications/unread-count    안 읽은 알림 개수
+  PUT  /api/notifications/{id}/read       특정 알림 읽음 처리
+
+대시보드
+  GET  /api/dashboard/manager   관리자 대시보드 (ADMIN만, 현장 노동자 안전등급 목록)
+  GET  /api/dashboard/worker    노동자 대시보드 (본인 데이터만)
+
+
+─────────────────────────────────────────────────────────────
+[User 엔티티에 추가한 메서드]  ※기존 User.java에 메서드만 추가함
+─────────────────────────────────────────────────────────────
+  assignSite(Integer siteId)               // 소속 현장 변경 (현장 합류/탈퇴 시)
+  updateNotificationEnabled(boolean)       // 알림 수신 여부 변경 (알림 설정)
+
+[UserRepository에 추가한 메서드]
+  findBySiteIdAndRole(Integer siteId, Role role)   // 현장 소속 노동자 목록 (관리자 대시보드용)
+
+
+─────────────────────────────────────────────────────────────
+[미완성 / 다른 파트 연동 필요]  ※코드에 TODO 주석으로도 표시함
+─────────────────────────────────────────────────────────────
+1. 대시보드 현장 이름(siteName)
+   - 관리자 대시보드에서 현장 이름 표시 부분은 현장(Site) 파트와 통합 후 연결 예정.
+   - 현재는 결합을 피하려고 siteName=null로 비워둠. (DashboardService의 TODO 참고)
+
+2. 감지 데이터 저장 (감지 파트 담당)
+   - DetectionRecord는 대시보드가 '읽기' 위한 뼈대. 실제 감지결과 저장은 감지 파트에서 구현.
+   - 저장 시: detection_records 저장 → UserSafetyStatus.increaseViolation()으로 등급 갱신
+     → 필요 시 Notification 이력 저장 + FCM 발송.
+
+3. FCM 실제 발송
+   - 지금은 알림 '이력 저장/조회'까지만 구현. 실제 푸시(Firebase Admin SDK)는 미구현.
+   - NotificationService.createNotification()을 발송 로직에서 재사용하면 됨.
+
+4. 관리자 대시보드 '오늘 총 입장/정상 통과' 건수
+   - detection_records가 위반만 저장하므로 정상 통과 수는 알 수 없음. 현재 0으로 둠.
+   - 감지 파트가 정상 통과도 집계해주면 채울 수 있음.
+
+5. (참고) safegate_schema.sql의 removal_logs 테이블 오류
+   - admin_user_id가 NOT NULL인데 FK가 ON DELETE SET NULL이라 충돌(Error 1830).
+   - NOT NULL을 빼거나 FK 옵션 변경 필요. (현장/스키마 담당 확인 요망)
