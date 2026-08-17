@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import com.example.ppe_server.dto.site.WorkerResponse;
+import com.example.ppe_server.dto.site.RemoveWorkerRequest;
 
 
 @RestController
@@ -59,6 +60,23 @@ public class SiteController {
             @RequestParam String nickname) {
         WorkerResponse worker = siteService.searchWorker(adminUserId, nickname);
         return ResponseEntity.ok(worker);
+    }
+
+    // 노동자 소속 해제 (관리자)
+    @DeleteMapping("/workers")
+    public ResponseEntity<String> removeWorker(
+            @AuthenticationPrincipal String adminUserId,
+            @RequestBody RemoveWorkerRequest request) {
+        siteService.removeWorker(adminUserId, request);
+        return ResponseEntity.ok("노동자 소속이 해제되었습니다.");
+    }
+
+    // 현장 삭제 (관리자, 혼자 남았을 때)
+    @DeleteMapping
+    public ResponseEntity<String> deleteSite(
+            @AuthenticationPrincipal String userId) {
+        siteService.deleteSite(userId);
+        return ResponseEntity.ok("현장이 삭제되었습니다.");
     }
 
 

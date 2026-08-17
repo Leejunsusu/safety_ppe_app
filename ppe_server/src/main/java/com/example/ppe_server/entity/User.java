@@ -64,4 +64,9 @@ public class User {
         this.siteId = siteId;
     }
 
+    // 알림 수신 여부 변경 (알림 설정 ON/OFF)
+    public void updateNotificationEnabled(boolean enabled) {
+        this.notificationEnabled = enabled;
+    }
+
 }

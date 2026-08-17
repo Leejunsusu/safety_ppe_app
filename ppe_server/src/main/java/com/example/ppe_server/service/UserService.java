@@ -119,6 +119,11 @@ public class UserService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
+        // 현장 소속 확인 (추가!)
+        if (user.getSiteId() != null) {
+            throw new IllegalArgumentException("현장에 소속되어 있어 탈퇴할 수 없습니다. 현장을 나가거나 삭제한 후 탈퇴하세요.");
+        }
+
         // 삭제
         userRepository.delete(user);
     }
