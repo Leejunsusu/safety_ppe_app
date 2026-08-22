@@ -7,6 +7,12 @@ build/
 
 # 민감 정보
 application-secret.properties
+application-prod.properties
+
+# EC2 키
+*.pem
+# 로그 파일
+*.log
 
 ### STS ###
 .apt_generated
