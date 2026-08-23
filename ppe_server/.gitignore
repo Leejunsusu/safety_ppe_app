@@ -14,6 +14,8 @@ application-prod.properties
 # 로그 파일
 *.log
 
+*.csv
+
 ### STS ###
 .apt_generated
 .classpath

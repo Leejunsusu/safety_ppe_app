@@ -86,8 +86,14 @@ public class UserService {
 
     // 비밀번호 재설정
     public void resetPassword(ResetPasswordRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("해당 이메일로 가입된 계정이 없습니다."));
+        // 아이디로 사용자 찾기
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("해당 아이디로 가입된 계정이 없습니다."));
+
+        // 이메일이 일치하는지 확인 (아이디 + 이메일 둘 다 맞아야 재설정)
+        if (!user.getEmail().equals(request.getEmail())) {
+            throw new IllegalArgumentException("아이디와 이메일이 일치하지 않습니다.");
+        }
 
         // 새 비밀번호를 해시해서 변경
         user.updatePassword(passwordEncoder.encode(request.getNewPassword()));

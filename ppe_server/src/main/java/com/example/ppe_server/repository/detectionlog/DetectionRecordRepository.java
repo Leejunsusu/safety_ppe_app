@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 감지 기록(detection_records) 리포지토리
@@ -27,4 +28,9 @@ public interface DetectionRecordRepository extends JpaRepository<DetectionRecord
 
     // 특정 노동자의 특정 기간 미착용 건수 (노동자 대시보드 통계)
     long countByTargetUserIdAndDetectedAtBetween(String targetUserId, LocalDateTime from, LocalDateTime to);
+
+    // ── [감지 파트 추가] 중복 저장 방지용 ──────────────────────
+    // clientUuid로 이미 저장된 감지 기록이 있는지 조회.
+    // (앱이 같은 감지를 재전송해도 중복 저장되지 않도록 DetectionService에서 사용)
+    Optional<DetectionRecord> findByClientUuid(String clientUuid);
 }
