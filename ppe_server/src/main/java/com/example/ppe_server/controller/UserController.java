@@ -3,6 +3,7 @@ package com.example.ppe_server.controller;
 // 회원 관련 요청 처리 (회원가입/로그인 등)
 
 import com.example.ppe_server.dto.SignupRequest;
+import com.example.ppe_server.dto.mypage.MyInfoResponse;
 import com.example.ppe_server.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -66,5 +67,28 @@ public class UserController {
         userService.deleteAccount(userId, request);
         return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
     }
+
+    // 마이페이지 - 내 정보 조회 (로그인 필요)
+    @GetMapping("/me")
+    public ResponseEntity<MyInfoResponse> getMyInfo(
+            @AuthenticationPrincipal String userId) {
+        MyInfoResponse response = userService.getMyInfo(userId);
+        return ResponseEntity.ok(response);
+    }
+
+    // 아이디 중복 확인
+    @GetMapping("/check-id")
+    public ResponseEntity<Boolean> checkUserId(@RequestParam String userId) {
+        boolean available = userService.isUserIdAvailable(userId);
+        return ResponseEntity.ok(available);   // true=사용가능, false=중복
+    }
+
+    // 닉네임 중복 확인
+    @GetMapping("/check-nickname")
+    public ResponseEntity<Boolean> checkNickname(@RequestParam String nickname) {
+        boolean available = userService.isNicknameAvailable(nickname);
+        return ResponseEntity.ok(available);   // true=사용가능, false=중복
+    }
+
 
 }

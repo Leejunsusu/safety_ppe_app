@@ -34,4 +34,14 @@ public class QrController {
         VerifyQrResponse response = qrService.verifyQr(request.getToken());
         return ResponseEntity.ok(response);
     }
+
+    // 내 QR 조회 (로그인 필요, 현재 유효한 내 QR 반환)
+    @GetMapping("/my")
+    public ResponseEntity<QrCodeResponse> getMyQr(
+            @AuthenticationPrincipal String userId) {
+        QrCodeResponse response = qrService.getMyQr(userId);
+        return ResponseEntity.ok(response);
+    }
+
+
 }

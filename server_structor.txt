@@ -64,7 +64,8 @@ ppe_server/                                    // 프로젝트 루트
 │   │   ├── qr/ (GenerateQrRequest, QrCodeResponse, VerifyQrRequest, VerifyQrResponse)
 │   │   ├── alarm/ (NotificationSettingRequest, NotificationSettingResponse, NotificationResponse)
 │   │   ├── coloring/ (ManagerDashboardResponse, WorkerSafetyResponse, WorkerDashboardResponse)
-│   │   ├── detectionlog/DetectionRecordResponse.java
+│   │   ├── dto/MyInfoResponse.java 
+│   │   ├── detectionlog/DetectionRecordResponse.java - 내 정보 조회 응답 (name, role, siteId, siteName)
 │   │           └── DetectionSaveRequest.java         // ☆ 감지 저장 요청 (앱→서버, items 목록·s3Key)
 │   │
 │   └── util/                                  // 유틸리티

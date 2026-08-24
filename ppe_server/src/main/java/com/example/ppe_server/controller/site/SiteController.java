@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import com.example.ppe_server.dto.site.WorkerResponse;
 import com.example.ppe_server.dto.site.RemoveWorkerRequest;
 
-
 @RestController
 @RequestMapping("/api/sites")
 @RequiredArgsConstructor
@@ -77,6 +76,14 @@ public class SiteController {
             @AuthenticationPrincipal String userId) {
         siteService.deleteSite(userId);
         return ResponseEntity.ok("현장이 삭제되었습니다.");
+    }
+
+    // 현장 노동자 수 조회 (관리자)
+    @GetMapping("/workers/count")
+    public ResponseEntity<Integer> getWorkerCount(
+            @AuthenticationPrincipal String adminUserId) {
+        int count = siteService.getWorkerCount(adminUserId);
+        return ResponseEntity.ok(count);
     }
 
 

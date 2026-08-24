@@ -30,9 +30,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     // 특정 현장에 소속된 사용자 수 (역할별)
     long countBySiteIdAndRole(Integer siteId, Role role);
 
-    // 특정 현장의 전체 사용자 수
-    long countBySiteId(Integer siteId);
-
     // 특정 현장의 특정 역할(노동자) 목록 (관리자 대시보드용)
     List<User> findBySiteIdAndRole(Integer siteId, Role role);
 }

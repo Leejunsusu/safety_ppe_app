@@ -3,8 +3,10 @@ package com.example.ppe_server.service;
 // 회원 로직 (중복확인/비번해시/로그인/토큰발급)
 
 import com.example.ppe_server.dto.SignupRequest;
+import com.example.ppe_server.dto.mypage.MyInfoResponse;
 import com.example.ppe_server.entity.User;
 import com.example.ppe_server.repository.UserRepository;
+import com.example.ppe_server.repository.site.SiteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,8 @@ import com.example.ppe_server.dto.ResetPasswordRequest;
 import com.example.ppe_server.dto.ChangePasswordRequest;
 import com.example.ppe_server.entity.Purpose;
 import com.example.ppe_server.dto.DeleteAccountRequest;
+import com.example.ppe_server.entity.site.Site;
+
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +31,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final EmailService emailService;
-
+    private final SiteRepository siteRepository;
 
     public void signup(SignupRequest request) {
 
@@ -132,6 +136,37 @@ public class UserService {
 
         // 삭제
         userRepository.delete(user);
+    }
+
+    // 마이페이지 - 내 정보 조회
+    public MyInfoResponse getMyInfo(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 소속 현장 이름 찾기 (현장 없으면 null)
+        String siteName = null;
+        if (user.getSiteId() != null) {
+            siteName = siteRepository.findById(user.getSiteId())
+                    .map(Site::getSiteName)
+                    .orElse(null);
+        }
+
+        return MyInfoResponse.builder()
+                .name(user.getName())
+                .role(user.getRole())
+                .siteId(user.getSiteId())
+                .siteName(siteName)
+                .build();
+    }
+
+    // 아이디 중복 확인 (사용 가능하면 true)
+    public boolean isUserIdAvailable(String userId) {
+        return !userRepository.existsById(userId);
+    }
+
+    // 닉네임 중복 확인 (사용 가능하면 true)
+    public boolean isNicknameAvailable(String nickname) {
+        return !userRepository.existsByNickname(nickname);
     }
 
 

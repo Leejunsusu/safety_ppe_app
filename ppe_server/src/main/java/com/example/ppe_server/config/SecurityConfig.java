@@ -27,7 +27,8 @@ public class SecurityConfig {
                         // 인증 없이 허용할 경로
                         .requestMatchers("/api/users/signup", "/api/users/login",
                                 "/api/users/find-id", "/api/users/reset-password",
-                                "/api/email/send", "/api/email/verify").permitAll()
+                                "/api/email/send", "/api/email/verify",
+                                "/api/users/check-id", "/api/users/check-nickname").permitAll()
                         // 나머지는 토큰 필요
                         .anyRequest().authenticated()
                 )

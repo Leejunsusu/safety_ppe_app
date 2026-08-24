@@ -100,4 +100,23 @@ public class QrService {
                 .message("유효한 QR입니다.")
                 .build();
     }
+
+    // 3. 내 QR 조회 (로그인한 노동자의 현재 유효한 QR 반환)
+    @Transactional(readOnly = true)
+    public QrCodeResponse getMyQr(String userId) {
+        // 내 QR 토큰 조회 (노동자별 1개, PK가 userId)
+        QrToken qrToken = qrTokenRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("발급된 QR이 없습니다."));
+
+        // 만료 체크 (서버 시간 기준) - 만료됐으면 막고 재발급 유도
+        if (qrToken.isExpired()) {
+            throw new IllegalArgumentException("QR이 만료되었습니다. 재발급이 필요합니다.");
+        }
+
+        // 유효한 QR → 이미지 재생성해서 반환
+        String qrImageBase64 = qrImageGenerator.generateBase64(qrToken.getToken());
+        return QrCodeResponse.of(qrToken, qrImageBase64);
+    }
+
+
 }
