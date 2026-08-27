@@ -64,14 +64,15 @@ ppe_server/                                    // 프로젝트 루트
 │   │   ├── qr/ (GenerateQrRequest, QrCodeResponse, VerifyQrRequest, VerifyQrResponse)
 │   │   ├── alarm/ (NotificationSettingRequest, NotificationSettingResponse, NotificationResponse)
 │   │   ├── coloring/ (ManagerDashboardResponse, WorkerSafetyResponse, WorkerDashboardResponse)
-│   │   ├── dto/MyInfoResponse.java 
+│   │   ├── mypage/MyInfoResponse.java 
 │   │   ├── detectionlog/DetectionRecordResponse.java - 내 정보 조회 응답 (name, role, siteId, siteName)
 │   │           └── DetectionSaveRequest.java         // ☆ 감지 저장 요청 (앱→서버, items 목록·s3Key)
 │   │
 │   └── util/                                  // 유틸리티
 │       ├── JwtUtil.java                       // JWT 토큰 생성/검증
 │       ├── site/SiteCodeGenerator.java       // 현장 6자리 코드 생성기
-│       └── qr/QrImageGenerator.java          // QR 이미지 생성기 (ZXing)
+│       ├── qr/QrImageGenerator.java          // QR 이미지 생성기 (ZXing)
+│       └── ppename/PpeNames.java                    // PPE 번호→한글 이름
 │
 ├── src/main/resources/                        // ★ 설정 파일 (배포하면서 정리됨)
 │   ├── application.properties                 // 공통 + 로컬 DB 설정 (localhost)

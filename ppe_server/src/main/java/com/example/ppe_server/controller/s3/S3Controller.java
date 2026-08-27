@@ -35,4 +35,17 @@ public class S3Controller {
         );
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * 조회용 URL 발급 (대시보드에서 사진 볼 때)
+     * @param s3Key 볼 사진의 경로
+     * @return { "viewUrl": "..." }
+     */
+    @GetMapping("/view-url")
+    public ResponseEntity<Map<String, String>> getViewUrl(
+            @RequestParam String s3Key) {
+        String viewUrl = s3Service.createViewUrl(s3Key);
+        Map<String, String> response = Map.of("viewUrl", viewUrl);
+        return ResponseEntity.ok(response);
+    }
 }

@@ -7,6 +7,10 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
+
 
 import java.time.Duration;
 import java.util.UUID;
@@ -52,4 +56,27 @@ public class S3Service {
         // 3. [업로드 URL, s3Key] 반환
         return new String[]{ presigned.url().toString(), s3Key };
     }
+
+    /**
+     * 조회용 Presigned URL 발급 (대시보드에서 사진 볼 때)
+     * @param s3Key 저장된 사진 경로 (DB의 s3Key)
+     * @return 사진을 볼 수 있는 임시 URL (5분 유효)
+     */
+    public String createViewUrl(String s3Key) {
+        GetObjectRequest objectRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(s3Key)
+                .build();
+
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(5))   // 5분 유효
+                .getObjectRequest(objectRequest)
+                .build();
+
+        PresignedGetObjectRequest presigned = s3Presigner.presignGetObject(presignRequest);
+
+        return presigned.url().toString();
+    }
+
+
 }

@@ -11,11 +11,14 @@ import com.example.ppe_server.entity.coloring.UserSafetyStatus;
 import com.example.ppe_server.repository.*;
 import com.example.ppe_server.repository.alarm.NotificationRepository;
 import com.example.ppe_server.repository.coloring.UserSafetyStatusRepository;
+import com.example.ppe_server.repository.detectionlog.DetectionPpeDetailRepository;
 import com.example.ppe_server.repository.detectionlog.DetectionRecordRepository;
 import com.example.ppe_server.repository.site.SiteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.ppe_server.repository.detectionlog.DetectionPpeDetailRepository;
+import com.example.ppe_server.util.ppename.PpeNames;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -49,6 +52,7 @@ public class DashboardService {
     private final DetectionRecordRepository detectionRecordRepository;
     private final NotificationRepository notificationRepository;
     private final SiteRepository siteRepository;
+    private final DetectionPpeDetailRepository detectionPpeDetailRepository;
     // [현장 파트 연동 안내]
     //   관리자 대시보드에서 '현장 이름(siteName)'을 보여주려면 현장(Site) 정보가 필요하다.
     //   현장 파트는 다른 팀원이 담당하며, SiteRepository는 별도 패키지(repository.site)에 있다.
@@ -102,6 +106,17 @@ public class DashboardService {
                         .thenComparing(Comparator.comparingInt(WorkerSafetyResponse::getViolationCount).reversed()))
                 .toList();
 
+        // ★★★ 여기 추가 — 등급별 인원 수 집계 ★★★
+        long greenCount = workerList.stream()
+                .filter(w -> w.getGrade() == SafetyGrade.GREEN)
+                .count();
+        long yellowCount = workerList.stream()
+                .filter(w -> w.getGrade() == SafetyGrade.YELLOW)
+                .count();
+        long redCount = workerList.stream()
+                .filter(w -> w.getGrade() == SafetyGrade.RED)
+                .count();
+
         // 오늘 하루 범위 계산 (00:00:00 ~ 다음날 00:00:00)
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
         LocalDateTime todayEnd = todayStart.plusDays(1);
@@ -113,8 +128,9 @@ public class DashboardService {
         return ManagerDashboardResponse.builder()
                 .siteId(siteId)
                 .siteName(siteName)
-                .todayEntryCount(0)      // TODO: 감지 파트가 '총 입장' 집계 제공 시 채우기
-                .todayPassCount(0)       // TODO: 감지 파트가 '정상 통과' 집계 제공 시 채우기
+                .greenCount(greenCount)
+                .yellowCount(yellowCount)
+                .redCount(redCount)
                 .todayViolationCount(todayViolation)
                 .workers(workerList)
                 .build();
@@ -135,12 +151,74 @@ public class DashboardService {
         List<DetectionRecordResponse> history = detectionRecordRepository
                 .findByTargetUserIdOrderByDetectedAtDesc(userId)
                 .stream()
-                .map(DetectionRecordResponse::from)
+                .map(record -> {
+                    // 이 기록의 미착용 장비 이름 목록 만들기
+                    List<String> notWornItems = detectionPpeDetailRepository
+                            .findByRecordId(record.getRecordId())
+                            .stream()
+                            .filter(d -> Boolean.FALSE.equals(d.getWorn()))  // 미착용만
+                            .map(d -> PpeNames.get(d.getPpeId()))            // 번호→이름
+                            .toList();
+                    return DetectionRecordResponse.from(record, notWornItems);
+                })
                 .toList();
 
         // 본인이 받은 알림 이력 (최신순)
         List<NotificationResponse> notis = notificationRepository
                 .findByReceiverUserIdOrderBySentAtDesc(userId)
+                .stream()
+                .map(NotificationResponse::from)
+                .toList();
+
+        return WorkerDashboardResponse.builder()
+                .userId(worker.getUserId())
+                .name(worker.getName())
+                .violationCount(status.getViolationCount())
+                .grade(status.getGrade())
+                .history(history)
+                .notifications(notis)
+                .build();
+    }
+
+    // ===================== 관리자가 특정 노동자 상세 조회 =====================
+    @Transactional(readOnly = true)
+    public WorkerDashboardResponse getWorkerDashboardByAdmin(String adminUserId, String targetUserId) {
+        // 1. 관리자 본인 확인
+        User admin = getUser(adminUserId);
+        if (admin.getRole() != Role.ADMIN) {
+            throw new IllegalStateException("관리자만 조회할 수 있습니다.");
+        }
+
+        // 2. 대상 노동자 조회
+        User worker = getUser(targetUserId);
+
+        // 3. 같은 현장인지 확인 (다른 현장 노동자 못 보게)
+        if (admin.getSiteId() == null || !admin.getSiteId().equals(worker.getSiteId())) {
+            throw new IllegalStateException("같은 현장의 노동자만 조회할 수 있습니다.");
+        }
+
+        // 4. 대상 노동자의 안전 등급
+        UserSafetyStatus status = safetyStatusRepository.findById(targetUserId)
+                .orElse(UserSafetyStatus.createDefault(targetUserId));
+
+        // 5. 대상 노동자의 미착용 이력 (장비 이름 포함)
+        List<DetectionRecordResponse> history = detectionRecordRepository
+                .findByTargetUserIdOrderByDetectedAtDesc(targetUserId)
+                .stream()
+                .map(record -> {
+                    List<String> notWornItems = detectionPpeDetailRepository
+                            .findByRecordId(record.getRecordId())
+                            .stream()
+                            .filter(d -> Boolean.FALSE.equals(d.getWorn()))
+                            .map(d -> PpeNames.get(d.getPpeId()))
+                            .toList();
+                    return DetectionRecordResponse.from(record, notWornItems);
+                })
+                .toList();
+
+        // 6. 대상 노동자가 받은 알림 이력
+        List<NotificationResponse> notis = notificationRepository
+                .findByReceiverUserIdOrderBySentAtDesc(targetUserId)
                 .stream()
                 .map(NotificationResponse::from)
                 .toList();

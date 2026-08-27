@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
  * ※ 로그인 필요. 로그인한 userId를 기준으로 조회하므로
  *   - 관리자 대시보드: 서비스에서 ADMIN 권한 체크
  *   - 노동자 대시보드: 본인 데이터만 반환 (타인 접근 불가)
+ *   - 관리자가 특정 노동자 상세 조회
  */
 @RestController
 @RequestMapping("/api/dashboard")
@@ -39,4 +40,14 @@ public class DashboardController {
             @AuthenticationPrincipal String userId) {
         return ResponseEntity.ok(dashboardService.getWorkerDashboard(userId));
     }
+
+    // 관리자가 특정 노동자 상세 조회 (Image 2)
+    @GetMapping("/worker/{targetUserId}")
+    public ResponseEntity<WorkerDashboardResponse> getWorkerDashboardByAdmin(
+            @AuthenticationPrincipal String adminUserId,
+            @PathVariable String targetUserId) {
+        return ResponseEntity.ok(
+                dashboardService.getWorkerDashboardByAdmin(adminUserId, targetUserId));
+    }
+
 }

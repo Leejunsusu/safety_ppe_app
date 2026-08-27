@@ -25,9 +25,11 @@ public class ManagerDashboardResponse {
     private Integer siteId;                     // 관리자의 소속 현장
     private String siteName;                    // 현장 이름
 
+    private long greenCount;    // 그린 인원 수
+    private long yellowCount;   // 옐로 인원 수
+    private long redCount;      // 레드 인원 수
+
     // === 상단 요약 통계 (오늘 기준) ===
-    private long todayEntryCount;               // 오늘 총 입장 건수 (TODO: 감지 파트 집계 필요)
-    private long todayPassCount;                // 오늘 정상 통과 건수 (TODO: 감지 파트 집계 필요)
     private long todayViolationCount;           // 오늘 미착용 발생 건수 (detection_records로 집계 가능)
 
     // === 하단: 노동자별 안전 등급 목록 (RED > YELLOW > GREEN 순) ===
