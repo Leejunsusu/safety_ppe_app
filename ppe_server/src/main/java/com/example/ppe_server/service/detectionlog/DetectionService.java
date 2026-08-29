@@ -13,6 +13,10 @@ import com.example.ppe_server.repository.coloring.UserSafetyStatusRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.ppe_server.entity.Role;
+import com.example.ppe_server.entity.User;
+import com.example.ppe_server.repository.UserRepository;
+import com.example.ppe_server.service.alarm.FcmService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +41,8 @@ public class DetectionService {
     private final DetectionPpeDetailRepository detectionPpeDetailRepository;
     private final UserSafetyStatusRepository userSafetyStatusRepository;
     private final NotificationRepository notificationRepository;
+    private final UserRepository userRepository;   // ← 추가
+    private final FcmService fcmService;            // ← 추가
 
     // PPE id → 한글 이름 (알림 메시지에 쓰려고. 없으면 그냥 "PPE"로 표시)
     // 인계문서 팀장 클래스 순서 기준 (0~15)
@@ -117,6 +123,10 @@ public class DetectionService {
                     .isRead(false)
                     .build();
             notificationRepository.save(notification);
+
+            // (4-3) FCM 푸시 발송 (모드별 대상)  ← 추가
+            sendFcmByMode(savedRecord, userId, message);
+
         }
 
         return recordId;
@@ -139,4 +149,35 @@ public class DetectionService {
         sb.append(" 미착용이 감지되었습니다.");
         return sb.toString();
     }
+
+    /**
+     * 모드별로 FCM 푸시를 보낸다.
+     * - Gate: 해당 노동자 + 현장 관리자 전원
+     * - Inspection: 해당 노동자만
+     */
+    private void sendFcmByMode(DetectionRecord record, String workerId, String message) {
+        String title = "PPE 미착용 감지";
+
+        // 노동자 조회
+        User worker = userRepository.findById(workerId).orElse(null);
+        if (worker == null) {
+            return;
+        }
+
+        // (1) 노동자에게 발송 (Gate, Inspection 둘 다)
+        //     예: "안전모 미착용이 감지되었습니다."
+        fcmService.sendNotification(worker.getFcmToken(), title, message);
+
+        // (2) Gate 모드면 → 현장 관리자 전원에게도
+        //     예: "홍길동 노동자가 안전모 미착용이 감지되었습니다."
+        if (record.getDetectionMode() == DetectionMode.GATE) {
+            String adminMessage = worker.getName() + " 노동자가 " + message;
+            List<User> admins = userRepository.findBySiteIdAndRole(record.getSiteId(), Role.ADMIN);
+            for (User admin : admins) {
+                fcmService.sendNotification(admin.getFcmToken(), title, adminMessage);
+            }
+        }
+    }
+
+
 }

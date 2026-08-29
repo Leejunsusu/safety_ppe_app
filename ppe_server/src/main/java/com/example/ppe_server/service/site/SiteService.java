@@ -17,6 +17,7 @@ import com.example.ppe_server.dto.site.WorkerResponse;
 import com.example.ppe_server.dto.site.RemoveWorkerRequest;
 
 import java.util.UUID;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -235,6 +236,30 @@ public class SiteService {
 
         long count = userRepository.countBySiteIdAndRole(siteId, Role.WORKER);
         return (int) count;
+    }
+
+    // 현장 노동자 목록 (Inspection 모드 - 노동자 선택용)
+    public List<WorkerResponse> getSiteWorkerList(String adminUserId) {
+        // 관리자 본인 조회
+        User admin = userRepository.findById(adminUserId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 관리자 권한 확인
+        if (admin.getRole() != Role.ADMIN) {
+            throw new IllegalArgumentException("관리자만 조회할 수 있습니다.");
+        }
+
+        // 소속 현장 확인
+        Integer siteId = admin.getSiteId();
+        if (siteId == null) {
+            throw new IllegalArgumentException("소속된 현장이 없습니다.");
+        }
+
+        // 그 현장의 노동자 목록 → WorkerResponse로 변환
+        return userRepository.findBySiteIdAndRole(siteId, Role.WORKER)
+                .stream()
+                .map(WorkerResponse::new)
+                .toList();
     }
 
 

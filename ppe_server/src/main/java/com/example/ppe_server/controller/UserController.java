@@ -3,6 +3,7 @@ package com.example.ppe_server.controller;
 // 회원 관련 요청 처리 (회원가입/로그인 등)
 
 import com.example.ppe_server.dto.SignupRequest;
+import com.example.ppe_server.dto.alarm.FcmTokenRequest;
 import com.example.ppe_server.dto.mypage.MyInfoResponse;
 import com.example.ppe_server.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -88,6 +89,15 @@ public class UserController {
     public ResponseEntity<Boolean> checkNickname(@RequestParam String nickname) {
         boolean available = userService.isNicknameAvailable(nickname);
         return ResponseEntity.ok(available);   // true=사용가능, false=중복
+    }
+
+    // FCM 토큰 저장 (로그인 필요)
+    @PostMapping("/fcm-token")
+    public ResponseEntity<String> updateFcmToken(
+            @AuthenticationPrincipal String userId,
+            @RequestBody FcmTokenRequest request) {
+        userService.updateFcmToken(userId, request.getFcmToken());
+        return ResponseEntity.ok("FCM 토큰이 저장되었습니다.");
     }
 
 

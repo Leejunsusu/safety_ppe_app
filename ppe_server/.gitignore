@@ -16,6 +16,10 @@ application-prod.properties
 
 *.csv
 
+# Firebase 키 (추가 권장)
+*firebase-adminsdk*.json
+firebase-key.json
+
 ### STS ###
 .apt_generated
 .classpath

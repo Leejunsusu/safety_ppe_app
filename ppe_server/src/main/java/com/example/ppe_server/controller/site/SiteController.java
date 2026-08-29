@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import com.example.ppe_server.dto.site.WorkerResponse;
 import com.example.ppe_server.dto.site.RemoveWorkerRequest;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/sites")
 @RequiredArgsConstructor
@@ -84,6 +86,13 @@ public class SiteController {
             @AuthenticationPrincipal String adminUserId) {
         int count = siteService.getWorkerCount(adminUserId);
         return ResponseEntity.ok(count);
+    }
+
+    // 현장 노동자 목록 조회 (관리자, Inspection 모드 노동자 선택용)
+    @GetMapping("/workers")
+    public ResponseEntity<List<WorkerResponse>> getSiteWorkerList(
+            @AuthenticationPrincipal String adminUserId) {
+        return ResponseEntity.ok(siteService.getSiteWorkerList(adminUserId));
     }
 
 

@@ -19,7 +19,7 @@ import com.example.ppe_server.dto.ChangePasswordRequest;
 import com.example.ppe_server.entity.Purpose;
 import com.example.ppe_server.dto.DeleteAccountRequest;
 import com.example.ppe_server.entity.site.Site;
-
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -167,6 +167,15 @@ public class UserService {
     // 닉네임 중복 확인 (사용 가능하면 true)
     public boolean isNicknameAvailable(String nickname) {
         return !userRepository.existsByNickname(nickname);
+    }
+
+    // FCM 토큰 저장 (앱이 보낸 토큰을 User에 저장)
+    @Transactional
+    public void updateFcmToken(String userId, String fcmToken) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        user.updateFcmToken(fcmToken);
+        userRepository.save(user);
     }
 
 

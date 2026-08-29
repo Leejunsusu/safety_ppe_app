@@ -8,7 +8,8 @@ ppe_server/                                    // 프로젝트 루트
 │   │   ├── PasswordConfig.java                // 비밀번호 암호화(BCrypt) 등록
 │   │   ├── SecurityConfig.java                // 보안 설정 (경로별 인증, JWT 필터 연결)
 │   │   ├── JwtAuthFilter.java                 // 요청마다 토큰 검사(문지기)
-│   │   └── S3Config.java                          // S3 연결 설정 (S3Presigner 빈)
+│   │   ├── S3Config.java                          // S3 연결 설정 (S3Presigner 빈)
+│   │   └── FirebaseConfig.java          // Firebase 초기화 (서버 시작 시 키로 연결)
 │   │
 │   ├── controller/                            // 요청을 받는 입구
 │   │   ├── UserController.java                // 회원 요청 (가입/로그인/아이디찾기/비번재설정·변경/탈퇴)
@@ -27,6 +28,7 @@ ppe_server/                                    // 프로젝트 루트
 │   │   ├── site/SiteService.java             // 현장 로직 (소속해제+QR무효화 연동)
 │   │   ├── qr/QrService.java                 // QR 로직 (1인1개 발급, 검증·만료판정)
 │   │   ├── alarm/NotificationService.java    // 알림 로직 (설정, 이력, 이력저장)
+│   │   ├── alarm/FcmService.java        // 푸시 발송 (토큰+제목+내용 → 발송)
 │   │   ├── coloring/DashboardService.java    // 대시보드 로직 (현장명 연결)
 │   │   ├── detectionlog/DetectionService.java    // ☆ 감지 저장 (record+detail+등급+알림) ★FCM 연결점
 │   │   └── s3/S3Service.java                      // ★ Presigned URL 발급 (5분 유효)
@@ -63,6 +65,7 @@ ppe_server/                                    // 프로젝트 루트
 │   │   │          WorkerResponse, RemoveWorkerRequest)
 │   │   ├── qr/ (GenerateQrRequest, QrCodeResponse, VerifyQrRequest, VerifyQrResponse)
 │   │   ├── alarm/ (NotificationSettingRequest, NotificationSettingResponse, NotificationResponse)
+│   │   ├── alarm/ FcmTokenRequest.java       // 토큰 저장 요청 DTO
 │   │   ├── coloring/ (ManagerDashboardResponse, WorkerSafetyResponse, WorkerDashboardResponse)
 │   │   ├── mypage/MyInfoResponse.java 
 │   │   ├── detectionlog/DetectionRecordResponse.java - 내 정보 조회 응답 (name, role, siteId, siteName)

@@ -69,4 +69,10 @@ public class User {
         this.notificationEnabled = enabled;
     }
 
+    // User.java에 추가
+    public void updateFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
+    }
+
+
 }
