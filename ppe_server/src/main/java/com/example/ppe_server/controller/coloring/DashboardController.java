@@ -50,4 +50,13 @@ public class DashboardController {
                 dashboardService.getWorkerDashboardByAdmin(adminUserId, targetUserId));
     }
 
+    // 관리자가 노동자 출입 차단 해제
+    @PostMapping("/worker/{targetUserId}/unblock")
+    public ResponseEntity<String> unblockWorker(
+            @AuthenticationPrincipal String adminUserId,
+            @PathVariable String targetUserId) {
+        dashboardService.unblockWorker(adminUserId, targetUserId);
+        return ResponseEntity.ok("출입 차단이 해제되었습니다.");
+    }
+
 }

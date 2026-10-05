@@ -4,12 +4,14 @@ import com.example.ppe_server.dto.qr.QrCodeResponse;
 import com.example.ppe_server.dto.qr.VerifyQrResponse;
 import com.example.ppe_server.entity.qr.QrToken;
 import com.example.ppe_server.entity.User;
+import com.example.ppe_server.repository.coloring.UserSafetyStatusRepository;
 import com.example.ppe_server.repository.qr.QrTokenRepository;
 import com.example.ppe_server.repository.UserRepository;
 import com.example.ppe_server.util.qr.QrImageGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.ppe_server.entity.coloring.UserSafetyStatus;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -21,6 +23,7 @@ public class QrService {
     private final QrTokenRepository qrTokenRepository;
     private final UserRepository userRepository;
     private final QrImageGenerator qrImageGenerator;
+    private final UserSafetyStatusRepository userSafetyStatusRepository;
 
     private static final int DEFAULT_VALID_DAYS = 1; // 기본 유효기간 1일
 
@@ -89,9 +92,23 @@ public class QrService {
                     .build();
         }
 
-        // 유효한 QR → 노동자 신원 정보 조회해서 반환
-        User worker = userRepository.findById(qrToken.getUserId()).orElse(null);
+        // 유효한 QR → 출입 차단 여부 확인
+        UserSafetyStatus status = userSafetyStatusRepository.findById(qrToken.getUserId())
+                .orElse(null);
 
+        // 출입 차단된 노동자면 → 입장 거부
+        if (status != null && status.isEntryBlocked()) {
+            User blockedWorker = userRepository.findById(qrToken.getUserId()).orElse(null);
+            return VerifyQrResponse.builder()
+                    .valid(false)
+                    .userId(qrToken.getUserId())
+                    .name(blockedWorker != null ? blockedWorker.getName() : null)
+                    .message("출입이 제한된 작업자입니다. (안전등급 위험) 관리자에게 문의하세요.")
+                    .build();
+        }
+
+        // 차단 안 됨 → 정상 입장
+        User worker = userRepository.findById(qrToken.getUserId()).orElse(null);
         return VerifyQrResponse.builder()
                 .valid(true)
                 .userId(qrToken.getUserId())
@@ -99,6 +116,7 @@ public class QrService {
                 .siteId(worker != null ? worker.getSiteId() : null)
                 .message("유효한 QR입니다.")
                 .build();
+
     }
 
     // 3. 내 QR 조회 (로그인한 노동자의 현재 유효한 QR 반환)

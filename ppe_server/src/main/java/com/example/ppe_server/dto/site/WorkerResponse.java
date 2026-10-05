@@ -9,10 +9,21 @@ public class WorkerResponse {
     private final String userId;
     private final String name;
     private final String nickname;
+    private final boolean entryBlocked;
 
     public WorkerResponse(User user) {
         this.userId = user.getUserId();
         this.name = user.getName();
         this.nickname = user.getNickname();
+        this.entryBlocked = false;
     }
+
+    // 차단 정보 포함 생성자 (추가)
+    public WorkerResponse(User user, boolean entryBlocked) {
+        this.userId = user.getUserId();
+        this.name = user.getName();
+        this.nickname = user.getNickname();
+        this.entryBlocked = entryBlocked;
+    }
+
 }

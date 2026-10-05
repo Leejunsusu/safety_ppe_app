@@ -17,7 +17,6 @@ import com.example.ppe_server.repository.site.SiteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.ppe_server.repository.detectionlog.DetectionPpeDetailRepository;
 import com.example.ppe_server.util.ppename.PpeNames;
 
 import java.time.LocalDate;
@@ -231,6 +230,30 @@ public class DashboardService {
                 .history(history)
                 .notifications(notis)
                 .build();
+    }
+
+    // 관리자가 노동자 출입 차단 해제
+    @Transactional
+    public void unblockWorker(String adminUserId, String targetUserId) {
+        // 관리자 본인 확인
+        User admin = getUser(adminUserId);
+        if (admin.getRole() != Role.ADMIN) {
+            throw new IllegalStateException("관리자만 해제할 수 있습니다.");
+        }
+
+        // 대상 노동자 조회
+        User worker = getUser(targetUserId);
+
+        // 같은 현장인지 확인
+        if (admin.getSiteId() == null || !admin.getSiteId().equals(worker.getSiteId())) {
+            throw new IllegalStateException("같은 현장의 노동자만 해제할 수 있습니다.");
+        }
+
+        // 안전상태 조회 → 출입 차단 해제
+        UserSafetyStatus status = safetyStatusRepository.findById(targetUserId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 노동자의 안전 정보가 없습니다."));
+        status.unblock();
+        safetyStatusRepository.save(status);
     }
 
     // ===================== 내부 헬퍼 =====================

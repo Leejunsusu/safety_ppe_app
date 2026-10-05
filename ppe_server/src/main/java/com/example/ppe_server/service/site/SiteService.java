@@ -7,6 +7,7 @@ import com.example.ppe_server.entity.User;
 import com.example.ppe_server.entity.site.Site;
 import com.example.ppe_server.entity.Role;
 import com.example.ppe_server.repository.UserRepository;
+import com.example.ppe_server.repository.coloring.UserSafetyStatusRepository;
 import com.example.ppe_server.repository.qr.QrTokenRepository;
 import com.example.ppe_server.repository.site.SiteRepository;
 import com.example.ppe_server.util.site.SiteCodeGenerator;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.ppe_server.dto.site.WorkerResponse;
 import com.example.ppe_server.dto.site.RemoveWorkerRequest;
+import com.example.ppe_server.entity.coloring.UserSafetyStatus;
 
 import java.util.UUID;
 import java.util.List;
@@ -26,6 +28,7 @@ public class SiteService {
     private final SiteRepository siteRepository;
     private final UserRepository userRepository;
     private final QrTokenRepository qrTokenRepository;
+    private final UserSafetyStatusRepository userSafetyStatusRepository;
 
     // 현장 생성 (관리자만)
     @Transactional
@@ -240,25 +243,26 @@ public class SiteService {
 
     // 현장 노동자 목록 (Inspection 모드 - 노동자 선택용)
     public List<WorkerResponse> getSiteWorkerList(String adminUserId) {
-        // 관리자 본인 조회
         User admin = userRepository.findById(adminUserId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        // 관리자 권한 확인
         if (admin.getRole() != Role.ADMIN) {
             throw new IllegalArgumentException("관리자만 조회할 수 있습니다.");
         }
 
-        // 소속 현장 확인
         Integer siteId = admin.getSiteId();
         if (siteId == null) {
             throw new IllegalArgumentException("소속된 현장이 없습니다.");
         }
 
-        // 그 현장의 노동자 목록 → WorkerResponse로 변환
         return userRepository.findBySiteIdAndRole(siteId, Role.WORKER)
                 .stream()
-                .map(WorkerResponse::new)
+                .map(w -> {
+                    boolean blocked = userSafetyStatusRepository.findById(w.getUserId())
+                            .map(UserSafetyStatus::isEntryBlocked)
+                            .orElse(false);
+                    return new WorkerResponse(w, blocked);
+                })
                 .toList();
     }
 

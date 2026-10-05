@@ -43,6 +43,9 @@ public class UserSafetyStatus {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;        // 마지막 갱신 시각
 
+    @Column(name = "entry_blocked", nullable = false)
+    private boolean entryBlocked;   // 출입 차단 여부
+
     @PrePersist // 저장 직전(최초 생성 시) 자동 처리
     protected void onCreate() {
         this.updatedAt = LocalDateTime.now();
@@ -66,6 +69,10 @@ public class UserSafetyStatus {
     public void increaseViolation() {
         this.violationCount += 1;
         this.grade = SafetyGrade.fromViolationCount(this.violationCount);
+        // RED(3회+)면 자동 출입 차단
+        if (this.grade == SafetyGrade.RED) {
+            this.entryBlocked = true;
+        }
     }
 
     /**
@@ -86,6 +93,14 @@ public class UserSafetyStatus {
                 .userId(userId)
                 .violationCount(0)
                 .grade(SafetyGrade.GREEN)
+                .entryBlocked(false)   // 기본 차단 안 됨
                 .build();
     }
+
+    // 관리자 출입 차단 해제
+    public void unblock() {
+        this.entryBlocked = false;
+    }
+
+
 }
