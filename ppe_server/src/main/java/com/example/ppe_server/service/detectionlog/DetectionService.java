@@ -113,7 +113,7 @@ public class DetectionService {
             status.increaseViolation();
             userSafetyStatusRepository.save(status);
 
-            // (4-2) 알림 이력 저장 (FCM 실제 발송은 추후, 지금은 DB 이력만)
+            // (4-2) 노동자 알림 이력 저장 (기존)
             String message = buildNotWornMessage(notWornPpeIds);
             Notification notification = Notification.builder()
                     .recordId(recordId)
@@ -123,6 +123,27 @@ public class DetectionService {
                     .isRead(false)
                     .build();
             notificationRepository.save(notification);
+
+            // (4-3) Gate 모드면 → 현장 관리자들에게도 알림 이력 저장 (이름 포함)
+            if (record.getDetectionMode() == DetectionMode.GATE) {
+                // 노동자 이름 조회
+                User worker = userRepository.findById(userId).orElse(null);
+                String workerName = (worker != null) ? worker.getName() : userId;
+                String adminMessage = workerName + " 노동자가 " + message;
+
+                // 현장 관리자들 조회
+                List<User> admins = userRepository.findBySiteIdAndRole(request.getSiteId(), Role.ADMIN);
+                for (User admin : admins) {
+                    Notification adminNoti = Notification.builder()
+                            .recordId(recordId)
+                            .receiverUserId(admin.getUserId())    // 관리자
+                            .message(adminMessage)                 // 이름 포함
+                            .channel("FCM")
+                            .isRead(false)
+                            .build();
+                    notificationRepository.save(adminNoti);
+                }
+            }
 
             // (4-3) FCM 푸시 발송 (모드별 대상)  ← 추가
             sendFcmByMode(savedRecord, userId, message);
