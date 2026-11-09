@@ -101,6 +101,9 @@ public class SiteService {
 
         user.updateSite(null);   // 소속 해제
         userRepository.save(user);
+
+        // QR 무효화 (현장 나가면 QR 삭제 → 게이트 통과 불가)
+        qrTokenRepository.deleteById(user.getUserId());
     }
 
     // 내 현재 소속 현장 조회

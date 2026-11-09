@@ -107,13 +107,25 @@ public class QrService {
                     .build();
         }
 
-        // 차단 안 됨 → 정상 입장
+        // 차단 안 됨 → 소속 현장 확인
         User worker = userRepository.findById(qrToken.getUserId()).orElse(null);
+
+        // 현장 소속 없으면(탈퇴/퇴출) → 입장 거부
+        if (worker == null || worker.getSiteId() == null) {
+            return VerifyQrResponse.builder()
+                    .valid(false)
+                    .userId(qrToken.getUserId())
+                    .name(worker != null ? worker.getName() : null)
+                    .message("현장 소속이 없는 작업자입니다. 입장할 수 없습니다.")
+                    .build();
+        }
+
+        // 정상 입장
         return VerifyQrResponse.builder()
                 .valid(true)
                 .userId(qrToken.getUserId())
-                .name(worker != null ? worker.getName() : null)
-                .siteId(worker != null ? worker.getSiteId() : null)
+                .name(worker.getName())
+                .siteId(worker.getSiteId())
                 .message("유효한 QR입니다.")
                 .build();
 
@@ -122,6 +134,13 @@ public class QrService {
     // 3. 내 QR 조회 (로그인한 노동자의 현재 유효한 QR 반환)
     @Transactional(readOnly = true)
     public QrCodeResponse getMyQr(String userId) {
+        // 소속 현장 확인 (현장 없으면 QR 반환 안 함)
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        if (user.getSiteId() == null) {
+            throw new IllegalArgumentException("소속된 현장이 없습니다. QR을 사용할 수 없습니다.");
+        }
+
         // 내 QR 토큰 조회 (노동자별 1개, PK가 userId)
         QrToken qrToken = qrTokenRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("발급된 QR이 없습니다."));
